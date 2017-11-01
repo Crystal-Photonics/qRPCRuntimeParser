@@ -1,6 +1,6 @@
 #include "rpcruntime_paramter_description.h"
+#include "rpc_util.h"
 
-#include <sstream>
 #include <cassert>
 
 RPCRuntimeParameterDescription::RPCRuntimeParameterDescription(int bit_size, std::string name, std::string ctype, int position,
@@ -102,7 +102,7 @@ RPCRuntimeParameterDescription::RPCRuntimeParameterDescription(const RPCRuntimeP
 	, bit_size(other.bit_size)
 	, parameter_name(other.parameter_name)
 	, parameter_ctype(other.parameter_ctype)
-    , parameter_position(other.parameter_position)  {
+	, parameter_position(other.parameter_position) {
 	switch (type) {
 		case Type::array:
 			type_dependent_values.array = new RPCRuntimeArrayParameter(*other.type_dependent_values.array);
@@ -127,7 +127,7 @@ RPCRuntimeParameterDescription::RPCRuntimeParameterDescription(RPCRuntimeParamet
 	, bit_size(other.bit_size)
 	, parameter_name(std::move(other.parameter_name))
 	, parameter_ctype(std::move(other.parameter_ctype))
-    , parameter_position(other.parameter_position)   {
+	, parameter_position(other.parameter_position) {
 	switch (type) {
 		case Type::array:
 			type_dependent_values.array = other.type_dependent_values.array;
@@ -172,8 +172,7 @@ RPCRuntimeParameterDescription::~RPCRuntimeParameterDescription() {
 	}
 }
 
-void RPCRuntimeParameterDescription::fix_array_bit_byte_bug()
-{
+void RPCRuntimeParameterDescription::fix_array_bit_byte_bug() {
 	//the bits reported in an array are incorrectly reported in bytes, not in bits
 	bit_size *= 8;
 }
@@ -182,19 +181,17 @@ RPCRuntimeArrayParameter::RPCRuntimeArrayParameter(RPCRuntimeParameterDescriptio
     : type(std::move(type))
     , number_of_elements(number_of_elements) {}
 
-int RPCRuntimeEnumerationParameter::Enum_value::to_int() const
-{
+int RPCRuntimeEnumerationParameter::Enum_value::to_int() const {
 	int retval;
-	std::stringstream ss(value);
-    if (!(ss >> std::noskipws >> retval)){
+	Byte_stream ss(value);
+	if (!(ss >> retval)) {
         throw std::domain_error("RPC: empty enum string cannot be converted to int");
 	}
 	return retval;
 }
 
-bool RPCRuntimeEnumerationParameter::Enum_value::is_int() const
-{
+bool RPCRuntimeEnumerationParameter::Enum_value::is_int() const {
 	int retval = 0;
-	std::stringstream ss(value);
-    return static_cast<bool>(ss >> std::noskipws >> retval);
+	Byte_stream ss(value);
+	return static_cast<bool>(ss >> retval);
 }
