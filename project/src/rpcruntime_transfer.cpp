@@ -1,4 +1,5 @@
 #include "rpcruntime_transfer.h"
+#include "rpc_util.h"
 #include "rpcruntime_decoded_function_call.h"
 #include "rpcruntime_decoder.h"
 #include "rpcruntime_protocol_description.h"
@@ -29,10 +30,10 @@ void RPCRuntimeTransfer::add_data(unsigned char byte) {
 
 RPCRuntimeDecodedFunctionCall RPCRuntimeTransfer::decode() const {
 	std::vector<RPCRuntimeDecodedParam> decoded_parameters;
-	std::stringstream ss;
+	Byte_stream ss;
 	ss.str({reinterpret_cast<const char *>(data.data()), data.size()});
 	unsigned char id;
-    ss >> std::noskipws >> id;
+	ss >> id;
 	ss.exceptions(std::stringstream::badbit | std::stringstream::failbit | std::stringstream::eofbit);
 	if (!ss) {
         throw std::runtime_error("RPC: No available data to decode");
