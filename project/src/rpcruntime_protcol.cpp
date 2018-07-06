@@ -24,6 +24,11 @@ RPCRuntimeProtocol::RPCRuntimeProtocol(RPCIODevice &device, std::chrono::steady_
     assert(connection);
 }
 
+RPCRuntimeProtocol::~RPCRuntimeProtocol()
+{
+    QObject::disconnect(connection);
+}
+
 RPCFunctionCallResult RPCRuntimeProtocol::call_and_wait(const RPCRuntimeEncodedFunctionCall &call) {
     return call_and_wait(call, device_timeout);
 }

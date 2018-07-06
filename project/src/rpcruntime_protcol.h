@@ -47,7 +47,7 @@ class RPCRuntimeProtocol : public QObject
     Q_OBJECT
 public:
     RPCRuntimeProtocol(RPCIODevice &device, std::chrono::steady_clock::duration timeout);
-
+    ~RPCRuntimeProtocol();
 
     RPCFunctionCallResult call_and_wait(const RPCRuntimeEncodedFunctionCall &call);
     RPCFunctionCallResult call_and_wait(const RPCRuntimeEncodedFunctionCall &call, std::chrono::steady_clock::duration timeout);
