@@ -10,9 +10,16 @@ RPCRuntimeProtocol::RPCRuntimeProtocol(RPCIODevice &device, std::chrono::steady_
     , channel_codec{decoder}
     , device(&device)
     , device_timeout(timeout) {
-    connection = QObject::connect(&device, &RPCIODevice::received, [&cc = channel_codec](const QByteArray &data) {
+    connection = QObject::connect( &device, &RPCIODevice::received, [&cc = channel_codec, this](const QByteArray &data) {
         //qDebug() << "RPC-Protocol received" << data.size() << "bytes from device";
-        cc.add_data(reinterpret_cast<const unsigned char *>(data.data()), data.size());
+        try{
+            cc.add_data(reinterpret_cast<const unsigned char *>(data.data()), data.size());
+        }catch(const std::runtime_error& e){
+           // qDebug() << QString(e.what());
+            emit console_message(
+                RPCConsoleLevel::debug,
+                QString(e.what()));
+        }
     });
     assert(connection);
 }
