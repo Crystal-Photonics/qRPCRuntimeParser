@@ -113,10 +113,11 @@ const channel_codec_instance_t *RPCRuntimeProtocol::debug_get_channel_codec_inst
     return channel_codec.debug_get_instance();
 }
 
-bool RPCRuntimeProtocol::load_xml_file(QString search_dir) {
-    // const CommunicationDevice::Duration TIMEOUT = std::chrono::milliseconds{100};
-    int retries_per_transmission_backup = retries_per_transmission;
-    retries_per_transmission = 0;
+RPCFunctionCallResult RPCRuntimeProtocol::call_get_hash_function(){
+    return call_get_hash_function(device_timeout);
+}
+
+RPCFunctionCallResult RPCRuntimeProtocol::call_get_hash_function(std::chrono::steady_clock::duration timeout){
     RPCRuntimeEncodedFunctionCall get_hash_function = encoder.encode(0);
     RPCRuntimeEncodedParam &param_hash = get_hash_function.get_parameter(0);
     RPCRuntimeEncodedParam &param_hash_index = get_hash_function.get_parameter(1);
@@ -126,7 +127,14 @@ bool RPCRuntimeProtocol::load_xml_file(QString search_dir) {
     param_hash_index[0].set_value(0);
     assert(get_hash_function.are_all_values_set());
 
-    auto result = call_and_wait(get_hash_function, device_timeout);
+    return call_and_wait(get_hash_function, timeout);
+}
+
+bool RPCRuntimeProtocol::load_xml_file(QString search_dir) {
+    // const CommunicationDevice::Duration TIMEOUT = std::chrono::milliseconds{100};
+    int retries_per_transmission_backup = retries_per_transmission;
+    retries_per_transmission = 0;
+    auto result = call_get_hash_function(device_timeout);
     retries_per_transmission = retries_per_transmission_backup;
     if (result.decoded_function_call_reply) {
         const auto &hash = QByteArray::fromStdString(result.decoded_function_call_reply->get_parameter_by_name("hash_inout")->as_full_string()).toHex();
