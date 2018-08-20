@@ -105,6 +105,10 @@ RPCRuntimeEncodedFunctionCall RPCRuntimeProtocol::encode_function(const std::str
     return encoder.encode(name);
 }
 
+RPCRuntimeEncodedFunctionCall RPCRuntimeProtocol::encode_function(const int request_id) const {
+    return encoder.encode(request_id);
+}
+
 const channel_codec_instance_t *RPCRuntimeProtocol::debug_get_channel_codec_instance() const {
     return channel_codec.debug_get_instance();
 }
