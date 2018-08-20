@@ -10,22 +10,19 @@ RPCRuntimeProtocol::RPCRuntimeProtocol(RPCIODevice &device, std::chrono::steady_
     , channel_codec{decoder}
     , device(&device)
     , device_timeout(timeout) {
-    connection = QObject::connect( &device, &RPCIODevice::received, [&cc = channel_codec, this](const QByteArray &data) {
+    connection = QObject::connect(&device, &RPCIODevice::received, [&cc = channel_codec, this ](const QByteArray &data) {
         //qDebug() << "RPC-Protocol received" << data.size() << "bytes from device";
-        try{
+        try {
             cc.add_data(reinterpret_cast<const unsigned char *>(data.data()), data.size());
-        }catch(const std::runtime_error& e){
-           // qDebug() << QString(e.what());
-            emit console_message(
-                RPCConsoleLevel::debug,
-                QString(e.what()));
+        } catch (const std::runtime_error &e) {
+            // qDebug() << QString(e.what());
+            emit console_message(RPCConsoleLevel::debug, QString(e.what()));
         }
     });
     assert(connection);
 }
 
-RPCRuntimeProtocol::~RPCRuntimeProtocol()
-{
+RPCRuntimeProtocol::~RPCRuntimeProtocol() {
     QObject::disconnect(connection);
 }
 
@@ -33,13 +30,12 @@ RPCFunctionCallResult RPCRuntimeProtocol::call_and_wait(const RPCRuntimeEncodedF
     return call_and_wait(call, device_timeout);
 }
 
-RPCFunctionCallResult RPCRuntimeProtocol::call_and_wait(const RPCRuntimeEncodedFunctionCall &call,
-                                                                                std::chrono::steady_clock::duration timeout) {
+RPCFunctionCallResult RPCRuntimeProtocol::call_and_wait(const RPCRuntimeEncodedFunctionCall &call, std::chrono::steady_clock::duration timeout) {
     RPCFunctionCallResult result;
     result.decoded_function_call_reply = nullptr;
     int try_count = 0;
     std::chrono::steady_clock::duration duration;
-    for (try_count=0; try_count <= retries_per_transmission; try_count++) {
+    for (try_count = 0; try_count <= retries_per_transmission; try_count++) {
         if (try_count != 0) {
             emit console_message(
                 RPCConsoleLevel::debug,
@@ -113,11 +109,18 @@ const channel_codec_instance_t *RPCRuntimeProtocol::debug_get_channel_codec_inst
     return channel_codec.debug_get_instance();
 }
 
-RPCFunctionCallResult RPCRuntimeProtocol::call_get_hash_function(){
+RPCFunctionCallResult RPCRuntimeProtocol::call_get_hash_function(int retries) {
+    int retries_per_transmission_old = retries_per_transmission;
+    retries_per_transmission = retries;
+    auto result = call_get_hash_function(device_timeout);
+    retries_per_transmission = retries_per_transmission_old;
+    return result;
+}
+RPCFunctionCallResult RPCRuntimeProtocol::call_get_hash_function() {
     return call_get_hash_function(device_timeout);
 }
 
-RPCFunctionCallResult RPCRuntimeProtocol::call_get_hash_function(std::chrono::steady_clock::duration timeout){
+RPCFunctionCallResult RPCRuntimeProtocol::call_get_hash_function(std::chrono::steady_clock::duration timeout) {
     RPCRuntimeEncodedFunctionCall get_hash_function = encoder.encode(0);
     RPCRuntimeEncodedParam &param_hash = get_hash_function.get_parameter(0);
     RPCRuntimeEncodedParam &param_hash_index = get_hash_function.get_parameter(1);

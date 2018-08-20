@@ -57,6 +57,7 @@ public:
     bool function_exists_for_encoding(const std::string &name) const;
     const channel_codec_instance_t *debug_get_channel_codec_instance() const;
     RPCFunctionCallResult call_get_hash_function(std::chrono::steady_clock::duration timeout);
+    RPCFunctionCallResult call_get_hash_function(int retries);
     RPCFunctionCallResult call_get_hash_function();
     bool load_xml_file(QString search_dir);
     int retries_per_transmission{2};
