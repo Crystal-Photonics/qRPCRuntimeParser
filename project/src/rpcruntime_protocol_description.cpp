@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <numeric>
 
 struct Common_parameter_attributes {
 	int bit_size;
