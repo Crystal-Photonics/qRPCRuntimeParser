@@ -153,10 +153,11 @@ bool RPCRuntimeProtocol::load_xml_file(QString search_dir) {
                     .toUtf8());
             return false;
         }
-        auto filepath = directory_iterator.next();
-        std::ifstream xmlfile(filepath.toStdString());
+		xml_file_path = directory_iterator.next().toStdString();
+		std::ifstream xmlfile(xml_file_path);
         if (description.openProtocolDescription(xmlfile) == false) {
             device->message(QObject::tr(R"(Failed opening RPC description file "%1".)").arg(filename).toUtf8());
+			xml_file_path.clear();
             return false;
         }
     }

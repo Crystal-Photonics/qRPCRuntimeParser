@@ -74,6 +74,7 @@ private:
     RPCIODevice *device = nullptr;
 
     std::chrono::steady_clock::duration device_timeout;
+	std::string xml_file_path;
 };
 
 #endif // RPCRUNTIMEPROTCOL_H
