@@ -43,7 +43,7 @@ RPCFunctionCallResult RPCRuntimeProtocol::call_and_wait(const RPCRuntimeEncodedF
         }
 
         device->send(channel_codec.encode(call), call.encode());
-        // Utility::thread_call(device,nullptr,
+		// Utility::thread_call(device,
         //                      [ device = this->device, data = channel_codec.encode(call), display_data = call.encode() ] { device->send(data, display_data);
         //                      });
         auto start = std::chrono::high_resolution_clock::now();
