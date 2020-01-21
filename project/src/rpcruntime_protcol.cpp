@@ -10,7 +10,7 @@ RPCRuntimeProtocol::RPCRuntimeProtocol(RPCIODevice &device, std::chrono::steady_
     , channel_codec{decoder}
     , device(&device)
     , device_timeout(timeout) {
-    connection = QObject::connect(&device, &RPCIODevice::received, [&cc = channel_codec, this ](const QByteArray &data) {
+    connection = QObject::connect(&device, &RPCIODevice::received, [&cc = channel_codec, this](const QByteArray &data) {
         //qDebug() << "RPC-Protocol received" << data.size() << "bytes from device";
         try {
             cc.add_data(reinterpret_cast<const unsigned char *>(data.data()), data.size());
@@ -43,7 +43,7 @@ RPCFunctionCallResult RPCRuntimeProtocol::call_and_wait(const RPCRuntimeEncodedF
         }
 
         device->send(channel_codec.encode(call), call.encode());
-		// Utility::thread_call(device,
+        // Utility::thread_call(device,
         //                      [ device = this->device, data = channel_codec.encode(call), display_data = call.encode() ] { device->send(data, display_data);
         //                      });
         auto start = std::chrono::high_resolution_clock::now();
@@ -153,16 +153,20 @@ bool RPCRuntimeProtocol::load_xml_file(QString search_dir) {
                     .toUtf8());
             return false;
         }
-		xml_file_path = directory_iterator.next().toStdString();
-		std::ifstream xmlfile(xml_file_path);
+        xml_file_path = directory_iterator.next().toStdString();
+        std::ifstream xmlfile(xml_file_path);
         if (description.openProtocolDescription(xmlfile) == false) {
             device->message(QObject::tr(R"(Failed opening RPC description file "%1".)").arg(filename).toUtf8());
-			xml_file_path.clear();
+            xml_file_path.clear();
             return false;
         }
     }
 
     return result.error == RPCError::success;
+}
+
+const std::string &RPCRuntimeProtocol::get_xml_file_path() const {
+    return xml_file_path;
 }
 
 RPCIODevice::RPCIODevice() {}
