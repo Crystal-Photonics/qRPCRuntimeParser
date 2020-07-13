@@ -57,7 +57,7 @@ class RPCRuntimeProtocol : public QObject {
     RPCFunctionCallResult call_get_hash_function(int retries);
     RPCFunctionCallResult call_get_hash_function();
     bool load_xml_file(QString search_dir);
-    int retries_per_transmission{2};
+    unsigned int retries_per_transmission{2};
     const std::string &get_xml_file_path() const;
 
     RPCRunTimeProtocolDescription description;

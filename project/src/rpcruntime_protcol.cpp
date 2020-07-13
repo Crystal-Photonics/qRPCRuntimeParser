@@ -33,7 +33,7 @@ RPCFunctionCallResult RPCRuntimeProtocol::call_and_wait(const RPCRuntimeEncodedF
 RPCFunctionCallResult RPCRuntimeProtocol::call_and_wait(const RPCRuntimeEncodedFunctionCall &call, std::chrono::steady_clock::duration timeout) {
     RPCFunctionCallResult result;
     result.decoded_function_call_reply = nullptr;
-    int try_count = 0;
+    unsigned int try_count = 0;
     std::chrono::steady_clock::duration duration;
     for (try_count = 0; try_count <= retries_per_transmission; try_count++) {
         if (try_count != 0) {
@@ -41,13 +41,9 @@ RPCFunctionCallResult RPCRuntimeProtocol::call_and_wait(const RPCRuntimeEncodedF
                 RPCConsoleLevel::debug,
                 QString(R"(Request for function "%1" timed out, retry %2)").arg(call.get_description()->get_function_name().c_str()).arg(try_count));
         }
-
         device->send(channel_codec.encode(call), call.encode());
-        // Utility::thread_call(device,
-        //                      [ device = this->device, data = channel_codec.encode(call), display_data = call.encode() ] { device->send(data, display_data);
-        //                      });
         auto start = std::chrono::high_resolution_clock::now();
-        auto check_received = [this, &start, &timeout, &call, &result, try_count]() -> std::unique_ptr<RPCRuntimeDecodedFunctionCall> {
+        auto check_received = [this, &start, &timeout, &call]() -> std::unique_ptr<RPCRuntimeDecodedFunctionCall> {
             device->waitReceived(timeout - (std::chrono::high_resolution_clock::now() - start), 1);
             if (channel_codec.transfer_complete()) { //found a reply
                 auto transfer = channel_codec.pop_completed_transfer();
@@ -55,9 +51,7 @@ RPCFunctionCallResult RPCRuntimeProtocol::call_and_wait(const RPCRuntimeEncodedF
                 emit device->decoded_received(QByteArray(reinterpret_cast<const char *>(raw_data.data()), raw_data.size()));
                 auto decoded_call = transfer.decode();
                 if (decoded_call.get_id() == call.get_description()->get_reply_id()) { //found correct reply
-
                     return std::make_unique<RPCRuntimeDecodedFunctionCall>(std::move(decoded_call));
-
                 } else { //found reply to something else, just gonna quietly ignore it
                     emit console_message(
                         RPCConsoleLevel::debug,
