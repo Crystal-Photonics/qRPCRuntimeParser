@@ -107,6 +107,9 @@ std::vector<Decoded_struct> RPCRuntimeDecodedParam::as_struct() const {
         retval.back().type.set_data(data.data() + current_data_position, data_size);
         current_data_position += data_size;
     }
+    if (current_data_position != static_cast<int>(data.size())) {
+        throw std::runtime_error("RPC struct size messed up. Typename: " + parameter_description->get_parameter_type());
+    }
     assert(current_data_position == static_cast<int>(data.size()));
     return retval;
 }
