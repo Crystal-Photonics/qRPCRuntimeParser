@@ -10,6 +10,7 @@
 
 struct Common_parameter_attributes {
 	int bit_size;
+    bool bit_size_is_possibly_devided_by_eight_due_to_bug_in_older_xml_generator_generating_structs;
 	std::string parameter_name;
 	std::string parameter_ctype;
 	int parameter_position;
@@ -21,7 +22,14 @@ static Common_parameter_attributes parse_common_parameter_attributes(QXmlStreamR
 	Common_parameter_attributes retval;
 	const auto &parameter_attributes = xml_reader.attributes();
 
-	retval.bit_size = parameter_attributes.value("bits").toInt();
+    if (parameter_attributes.hasAttribute("bits")) {
+		retval.bit_size = parameter_attributes.value("bits").toInt();
+        retval.bit_size_is_possibly_devided_by_eight_due_to_bug_in_older_xml_generator_generating_structs = true;
+    } else {
+        retval.bit_size = parameter_attributes.value("bytes").toInt() * 8;
+        retval.bit_size_is_possibly_devided_by_eight_due_to_bug_in_older_xml_generator_generating_structs = false;
+    }
+
 	assert(retval.bit_size != 0); //this fails if bit_size doesn't exist or could not be parsed or has an invalid value
 
 	retval.parameter_name = parameter_attributes.value("name").toString().toStdString();
@@ -118,9 +126,6 @@ static RPCRuntimeParameterDescription parse_array_parameter(QXmlStreamReader &xm
 	assert(number_of_elements);
 
     auto type = parse_parameter(xml_reader);
-	if (type.get_type() == RPCRuntimeParameterDescription::Type::structure) {
-		type.fix_array_bit_byte_bug();
-	}
 	RPCRuntimeArrayParameter array{std::move(type), number_of_elements};
 	//array.type.bit_size = bit_size:
 	xml_reader.skipCurrentElement();
@@ -136,7 +141,6 @@ static RPCRuntimeParameterDescription parse_struct_parameter(QXmlStreamReader &x
 	Common_parameter_attributes common_attributes = parse_common_parameter_attributes(xml_reader);
 	RPCRuntimeStructureParameter structure;
 
-
 	while (xml_reader.readNextStartElement()) {
 		assert(xml_reader.name() == "parameter");
         structure.members.push_back(parse_parameter(xml_reader));
@@ -146,6 +150,9 @@ static RPCRuntimeParameterDescription parse_struct_parameter(QXmlStreamReader &x
                 common_attributes.parameter_position, std::move(structure)};
 
     //retval.set_field_id(field_id);
+    if (common_attributes.bit_size_is_possibly_devided_by_eight_due_to_bug_in_older_xml_generator_generating_structs) {
+        retval.fix_array_bit_byte_bug();
+    }
     return retval;
 }
 
