@@ -7,6 +7,8 @@
 #include <sstream>
 #include <string>
 #include <numeric>
+#include <QStringView>
+
 
 struct Common_parameter_attributes {
 	int bit_size;
@@ -49,14 +51,14 @@ static RPCRuntimeParameterDescription parse_integer_parameter(QXmlStreamReader &
 	RPCRuntimeIntegerParameter integer_parameter;
 
 	const auto &parameter_attributes = xml_reader.attributes();
-	assert(parameter_attributes.value("type") == "integer");
+    assert(parameter_attributes.value("type") == QStringView(L"integer"));
 
 	xml_reader.readNextStartElement();
-	assert(xml_reader.name() == "integer");
+    assert(xml_reader.name() == QString("integer"));
 	auto signed_string = xml_reader.attributes().value("signed");
-	if (signed_string == "True" || signed_string == "true") {
+    if (signed_string ==  QString("True") || signed_string ==  QString("true")) {
 		integer_parameter.is_signed = true;
-	} else if (signed_string == "False" || signed_string == "false") {
+    } else if (signed_string == QString( "False" )|| signed_string ==  QString("false")) {
 		integer_parameter.is_signed = false;
 	} else {
         throw std::runtime_error("RPC: Integer parameter has no propper signed attribute");
@@ -76,7 +78,7 @@ static RPCRuntimeParameterDescription parse_enum_parameter(QXmlStreamReader &xml
 	enumeration.enum_name = common_attributes.parameter_ctype;
 
 	while (xml_reader.readNextStartElement()) {
-		assert(xml_reader.name() == "enum");
+        assert(xml_reader.name() ==  QString("enum"));
 		const auto &enum_attributes = xml_reader.attributes();
 		RPCRuntimeEnumerationParameter::Enum_value ev;
 		ev.value = enum_attributes.value("value").toString().toStdString();
@@ -112,7 +114,7 @@ static RPCRuntimeParameterDescription parse_array_parameter(QXmlStreamReader &xm
 
 
 	const auto &parameter_attributes = xml_reader.attributes();
-	assert(parameter_attributes.value("type") == "array");
+    assert(parameter_attributes.value("type") ==  QString("array"));
 
 	int bit_size = parameter_attributes.value("bits").toInt();
 	(void)bit_size;
@@ -120,7 +122,7 @@ static RPCRuntimeParameterDescription parse_array_parameter(QXmlStreamReader &xm
 	xml_reader.readNextStartElement();
 
 	const auto &array_attributes = xml_reader.attributes();
-	assert(xml_reader.name() == "array");
+    assert(xml_reader.name() ==  QString("array"));
 
 	int number_of_elements = array_attributes.value("elements").toInt();
 	assert(number_of_elements);
@@ -142,7 +144,7 @@ static RPCRuntimeParameterDescription parse_struct_parameter(QXmlStreamReader &x
 	RPCRuntimeStructureParameter structure;
 
 	while (xml_reader.readNextStartElement()) {
-		assert(xml_reader.name() == "parameter");
+        assert(xml_reader.name() == QString( "parameter"));
         structure.members.push_back(parse_parameter(xml_reader));
 	}
 
@@ -157,18 +159,18 @@ static RPCRuntimeParameterDescription parse_struct_parameter(QXmlStreamReader &x
 }
 
 static RPCRuntimeParameterDescription parse_parameter(QXmlStreamReader &xml_reader) {
-	assert(xml_reader.name() == "parameter" || xml_reader.name() == "array");
+    assert(xml_reader.name() ==  QString("parameter") || xml_reader.name() ==  QString("array"));
 	const auto &parameter_attributes = xml_reader.attributes();
 	const auto &type_name = parameter_attributes.value("type");
-	if (type_name == "integer") {
+    if (type_name == QString("integer")) {
        return parse_integer_parameter(xml_reader);
-	} else if (type_name == "enum") {
+    } else if (type_name ==  QString("enum")) {
         return parse_enum_parameter(xml_reader);
-	} else if (type_name == "struct") {
+    } else if (type_name ==  QString("struct")) {
         return parse_struct_parameter(xml_reader);
-	} else if (type_name == "array") {
+    } else if (type_name ==  QString("array")) {
         return parse_array_parameter(xml_reader);
-	} else if (type_name == "character") {
+    } else if (type_name ==  QString("character")) {
         return parse_character_parameter(xml_reader);
 	}
 	//unknown type
@@ -179,10 +181,10 @@ static RPCRuntimeParameterDescription parse_parameter(QXmlStreamReader &xml_read
 static std::vector<RPCRuntimeParameterDescription> parse_parameters(QXmlStreamReader &xml_reader) {
 	std::vector<RPCRuntimeParameterDescription> retval;
 	while (xml_reader.readNextStartElement()) {
-		if (xml_reader.name() != "parameter") {
+        if (xml_reader.name() !=  QString("parameter")) {
 			qDebug() << "next element should be \"parameter\" but is " << xml_reader.name() << "instead";
 		}
-		assert(xml_reader.name() == "parameter");
+        assert(xml_reader.name() ==  QString("parameter"));
 		//const auto &parameter_attributes = xml_reader.attributes();
 		//debugoutput << "parameter name: " << parameter_attributes.value("name").toString().toStdString() << '\n';
 		//xml_reader.skipCurrentElement();
@@ -200,24 +202,24 @@ static RPCRuntimeFunction parse_function(QXmlStreamReader &xml_reader) {
 	std::string function_declaration;
 
 	const auto &function_attributes = xml_reader.attributes();
-	if (xml_reader.name() != "function") {
+    if (xml_reader.name() !=  QString("function")) {
 		qDebug() << "next element should be \"function\" but is " << xml_reader.name() << "instead";
 	}
 
-	assert(xml_reader.name() == "function");
+    assert(xml_reader.name() ==  QString("function"));
 	function_name = function_attributes.value("name").toString().toStdString();
 
 	while (xml_reader.readNextStartElement()) {
-		if (xml_reader.name() == "declaration") {
+        if (xml_reader.name() ==  QString("declaration")) {
 			function_declaration = xml_reader.readElementText().toStdString();
-		} else if (xml_reader.name() == "request") {
+        } else if (xml_reader.name() == QString( "request")) {
 			bool ok;
 			request_id = xml_reader.attributes().value("ID").toInt(&ok);
 			if (!ok) {
 				request_id = -1;
 			}
             request_parameters = parse_parameters(xml_reader);
-		} else if (xml_reader.name() == "reply") {
+        } else if (xml_reader.name() ==  QString("reply")) {
 			bool ok;
 			reply_id = xml_reader.attributes().value("ID").toInt(&ok);
 			if (!ok) {
@@ -374,7 +376,7 @@ bool RPCRunTimeProtocolDescription::open_description(std::istream &input) {
 	}
 
 	MAKESURE(xml_reader.readNextStartElement());
-	MAKESURE(xml_reader.name() == "RPC");
+    MAKESURE(xml_reader.name() == QString("RPC"));
 
 	const auto &rpc_attributes = xml_reader.attributes();
 
