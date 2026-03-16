@@ -1,7 +1,7 @@
 #include "rpcruntime_encoded_function_call.h"
 #include "rpcruntime_encoded_param.h"
 #include "rpcruntime_function.h"
-
+#include <stdexcept>
 #include <algorithm>
 #include <cassert>
 
