@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cassert>
+#include <stdexcept>
 
 RPCRuntimeEncodedFunctionCall::RPCRuntimeEncodedFunctionCall(const RPCRuntimeFunction &function)
 	: function(&function) {
